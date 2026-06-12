@@ -4,7 +4,7 @@
 import os
 import sys
 
-APP_NAME = "DigiBox"
+APP_NAME = "OpenArchive"
 APP_VERSION = "1.0.0"
 
 # ================================
