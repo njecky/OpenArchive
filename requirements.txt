@@ -10380,3 +10380,933 @@ Juste dis 👍
 
 
 
+
+
+
+
+
+
+
+C'est une excellente fonctionnalité pour **DigiBox**, car elle transforme le logiciel en un véritable 
+**système de traçabilité des documents physiques**et non uniquement un logiciel d'archivage.
+
+Je te propose un scénario professionnel qui peut être utilisé dans une administration, une entreprise, 
+une mairie, un tribunal, un hôpital ou une université.
+
+---
+
+# 📄 Scénario : Traçabilité et rappel des documents physiques
+
+## Situation
+
+Un utilisateur souhaite consulter un document papier qui est conservé dans les archives.
+
+Le document doit être sorti des archives et remis à l'utilisateur pendant une durée déterminée.
+
+Le logiciel doit garantir que le document revienne dans les archives avant la date prévue.
+
+---
+
+# Étape 1 : Demande du document
+
+L'utilisateur se présente.
+
+Exemple :
+
+> Bonjour, j'ai besoin du dossier **Contrat NH-2023-014**.
+
+L'administrateur recherche le document dans DigiBox.
+
+Puis clique sur
+
+> **Emprunter un document**
+
+---
+
+## L'administrateur remplit le formulaire
+
+Nom du document
+
+```
+Contrat NH-2023-014
+```
+
+Utilisateur
+
+```
+Jean Dupont
+```
+
+Service
+
+```
+Comptabilité
+```
+
+Date de sortie
+
+```
+28 Juin 2026
+```
+
+Heure
+
+```
+14:00
+```
+
+Date prévue de retour
+
+```
+29 Juin 2026
+```
+
+Heure prévue
+
+```
+15:00
+```
+
+Motif
+
+```
+Audit interne
+```
+
+Observations
+
+```
+Document remis en main propre.
+```
+
+Puis clique sur
+
+```
+Enregistrer
+```
+
+---
+
+# Étape 2 : Ce qui est enregistré
+
+Une nouvelle ligne est créée dans la base de données.
+
+| Champ        | Valeur              |
+| ------------ | ------------------- |
+| Document     | Contrat NH-2023-014 |
+| Utilisateur  | Jean Dupont         |
+| Date sortie  | 28/06/2026          |
+| Heure sortie | 14:00               |
+| Retour prévu | 29/06/2026          |
+| Heure prévue | 15:00               |
+| Statut       | Emprunté            |
+
+---
+
+# Étape 3 : Le lendemain
+
+Le 29 Juin.
+
+L'administrateur ouvre DigiBox.
+
+Avant même d'accéder au tableau de bord...
+
+Une fenêtre apparaît automatiquement.
+
+---
+
+# 🔔 Alerte
+
+```
+──────────────────────────────────
+
+        RAPPEL IMPORTANT
+
+1 document doit être récupéré aujourd'hui.
+
+Document :
+
+Contrat NH-2023-014
+
+Utilisateur :
+
+Jean Dupont
+
+Retour prévu :
+
+Aujourd'hui
+
+15:00
+
+──────────────────────────────────
+
+[Voir le document]
+
+[Fermer]
+
+──────────────────────────────────
+```
+
+---
+
+Si plusieurs documents sont attendus :
+
+```
+8 documents doivent être retournés aujourd'hui.
+```
+
+---
+
+# Étape 4 : Notification permanente
+
+Même après avoir fermé l'alerte,
+
+une notification reste affichée.
+
+Par exemple dans la barre supérieure :
+
+```
+🔔 Documents à récupérer (3)
+```
+
+ou
+
+```
+🔔 3 retours prévus aujourd'hui
+```
+
+---
+
+# Étape 5 : Tableau des documents empruntés
+
+Nouvelle interface :
+
+```
+Documents empruntés
+```
+
+| Document     | Utilisateur | Sortie | Retour prévu    | Statut        |
+| ------------ | ----------- | ------ | --------------- | ------------- |
+| Contrat NH   | Jean        | 28/06  | Aujourd'hui 15h | 🟠 En attente |
+| Dossier RH   | Alice       | 27/06  | Demain          | 🟢 Normal     |
+| Facture 2022 | Paul        | 20/06  | Hier            | 🔴 En retard  |
+
+---
+
+# Étape 6 : Lorsque le document revient
+
+L'administrateur clique
+
+```
+Retour du document
+```
+
+Le logiciel demande
+
+```
+Confirmer le retour ?
+```
+
+Oui
+
+↓
+
+Le statut devient
+
+```
+Retourné
+```
+
+Le document réapparaît dans les archives.
+
+---
+
+# Étape 7 : Si le document n'est pas rendu
+
+À partir de 15h01
+
+Le logiciel passe automatiquement le document en
+
+```
+EN RETARD
+```
+
+Couleur
+
+🔴 Rouge
+
+Une alerte apparaît
+
+```
+DOCUMENT EN RETARD
+
+Contrat NH-2023-014
+
+Utilisateur :
+
+Jean Dupont
+
+Retard :
+
+1 heure 22 minutes
+```
+
+Le lendemain
+
+```
+Retard :
+
+1 jour
+```
+
+Puis
+
+```
+2 jours
+
+3 jours
+
+7 jours
+
+15 jours
+```
+
+---
+
+# Étape 8 : Historique
+
+Tout est conservé.
+
+| Date        | Action               |
+| ----------- | -------------------- |
+| 28/06 14h   | Document sorti       |
+| 29/06 14h   | Notification envoyée |
+| 29/06 15h   | Rappel affiché       |
+| 29/06 15h30 | Toujours non rendu   |
+| 30/06       | Document en retard   |
+| 02/07       | Document retourné    |
+
+---
+
+# Fonctionnalités que DigiBox pourrait offrir
+
+## 📥 Gestion des emprunts
+
+* Enregistrer un emprunt de document physique.
+* Associer un document à un utilisateur ou à un service.
+* Définir une date et une heure de retour.
+
+## 🔔 Gestion des rappels
+
+* Alerte automatique au démarrage du logiciel.
+* Notifications pour les retours prévus dans la journée.
+* Rappels plusieurs heures avant l'échéance.
+* Alertes visuelles pour les documents en retard.
+
+## 📊 Tableau de suivi
+
+* Documents actuellement empruntés.
+* Documents attendus aujourd'hui.
+* Documents en retard.
+* Documents retournés.
+* Historique des mouvements.
+
+## 📈 Statistiques
+
+* Nombre de documents empruntés.
+* Nombre de retours effectués.
+* Nombre de retards.
+* Durée moyenne des emprunts.
+* Utilisateurs empruntant le plus de documents.
+* Documents les plus consultés.
+
+## 🔍 Recherche et filtres
+
+* Recherche par nom du document.
+* Recherche par utilisateur.
+* Recherche par service.
+* Filtre par statut (Emprunté, Retourné, En retard).
+* Filtre par période ou par date.
+
+## 📝 Historique et audit
+
+* Journal complet des sorties et retours.
+* Date et heure de chaque mouvement.
+* Identité de l'utilisateur concerné.
+* Administrateur ayant validé l'opération.
+* Adresse IP et poste utilisé (si pertinent).
+
+## 🔐 Sécurité
+
+* Seuls les administrateurs ou archivistes peuvent autoriser un emprunt ou enregistrer un retour.
+* Impossible d'emprunter un document déjà sorti.
+* Traçabilité complète de toutes les opérations.
+
+---
+
+## Une évolution intéressante
+
+Tu pourrais aller encore plus loin en intégrant un système de **réservation de document physique**. Si un document est déjà emprunté, un autre
+utilisateur peut demander à être averti lorsqu'il sera de nouveau disponible. Le logiciel gère alors une file d'attente, envoie une 
+notification à l'administrateur lors du retour du document et indique quel utilisateur est prioritaire pour le prochain emprunt. Cela ferait 
+de DigiBox un véritable **logiciel professionnel de gestion et de traçabilité des archives physiques**, comparable aux solutions utilisées 
+dans les grandes administrations et entreprises.
+
+
+
+
+
+L'attribut **`reminder_sent`** sert à éviter que le logiciel envoie ou affiche **la même alerte plusieurs fois** pour un même emprunt.
+
+### Sans `reminder_sent`
+
+Imaginons les données suivantes :
+
+| Document            | Utilisateur | Date retour | Heure retour |
+| ------------------- | ----------- | ----------- | ------------ |
+| Dossier Fiscal 2025 | Jean        | 30/06/2026  | 15:00        |
+
+Le 30/06/2026 à 15h00, l'administrateur ouvre DigiBox.
+
+Le logiciel détecte que le document doit être rendu et affiche :
+
+> 🔔 **Rappel : Jean doit rendre le document "Dossier Fiscal 2025" aujourd'hui à 15h00.**
+
+Le problème est que :
+
+* si l'admin ferme DigiBox puis le rouvre 5 minutes plus tard, le même message apparaît encore ;
+* s'il ouvre DigiBox 20 fois dans la journée, le message apparaît 20 fois.
+
+Ce comportement devient rapidement gênant.
+
+---
+
+### Avec `reminder_sent`
+
+Au départ :
+
+```text
+reminder_sent = 0
+```
+
+À l'ouverture de DigiBox :
+
+```text
+Le logiciel trouve :
+Date = aujourd'hui
+Heure = atteinte
+reminder_sent = 0
+```
+
+Il affiche l'alerte.
+
+Ensuite il exécute :
+
+```sql
+UPDATE physical_document_loans
+SET reminder_sent = 1
+WHERE id = ?;
+```
+
+Maintenant :
+
+```text
+reminder_sent = 1
+```
+
+Lors de la prochaine ouverture du logiciel :
+
+Le programme vérifie :
+
+```text
+Date = aujourd'hui
+Heure = atteinte
+reminder_sent = 1
+```
+
+Il comprend que cette alerte a déjà été affichée et ne l'affiche plus.
+
+---
+
+## Exemple concret
+
+### Le 29 juin
+
+L'admin prête un dossier.
+
+```
+loan_date = 29/06/2026
+loan_time = 14:00
+
+expected_return = 30/06/2026
+expected_return_time = 15:00
+
+reminder_sent = 0
+```
+
+---
+
+### Le 30 juin à 14h50
+
+L'admin ouvre DigiBox.
+
+```
+Il est encore trop tôt.
+```
+
+Aucune alerte.
+
+---
+
+### Le 30 juin à 15h00
+
+L'admin ouvre DigiBox.
+
+```
+Date atteinte
+Heure atteinte
+reminder_sent = 0
+```
+
+Le logiciel affiche :
+
+```
+🔔 Rappel
+
+Jean doit retourner le dossier
+"Dossier Fiscal 2025"
+aujourd'hui à 15h00.
+```
+
+Puis :
+
+```text
+reminder_sent = 1
+```
+
+---
+
+### Le 30 juin à 15h30
+
+L'admin ouvre encore DigiBox.
+
+Le logiciel voit :
+
+```
+reminder_sent = 1
+```
+
+Il n'affiche plus le rappel.
+
+---
+
+## Est-ce indispensable ?
+
+Pas forcément.
+Si tu souhaites que **le rappel apparaisse à chaque ouverture du logiciel tant que le document n'a pas été restitué**, tu peux supprimer 
+complètement cette colonne.
+
+Le programme vérifiera simplement :
+
+```text
+Date >= expected_return
+ET
+
+returned = 0
+```
+
+Et affichera le rappel à chaque lancement.
+
+---
+
+## Pour DigiBox
+
+Au vu de ton projet d'archivage physique, je te recommande **de ne pas utiliser `reminder_sent`**.
+
+Il est généralement plus utile que l'administrateur voie le rappel **à chaque ouverture de DigiBox** jusqu'à ce que le document soit 
+effectivement rendu. Une fois la restitution enregistrée (`returned = 1` ou `status = 'Retourné'`), les rappels s'arrêtent automatiquement.
+
+Cette approche est plus simple à implémenter, évite d'oublier un document en retard et correspond mieux à un système de suivi des prêts de 
+documents physiques.
+
+
+
+
+
+C'est une meilleure conception. Je te recommande de **séparer les dates et les heures**. Cela simplifie les recherches (par date), les 
+rappels et l'affichage dans l'interface.
+
+Je te propose la structure suivante.
+
+```sql
+-- ==========================================
+-- 📦 TABLE : PHYSICAL DOCUMENT LOANS
+-- Gestion des prêts des documents physiques
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS physical_document_loans (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    -- ================================
+    -- Informations du document
+    -- ================================
+    document_name TEXT NOT NULL,
+
+    -- ================================
+    -- Informations de l'emprunteur
+    -- ================================
+    borrower_name TEXT NOT NULL,
+
+    borrower_service TEXT,
+
+    borrower_phone TEXT,
+
+    purpose TEXT,
+
+    -- ================================
+    -- Date et heure de sortie
+    -- ================================
+
+    loan_date DATE DEFAULT (DATE('now','localtime')),
+
+    loan_time TIME DEFAULT (TIME('now','localtime')),
+
+    -- ================================
+    -- Date et heure prévues de retour
+    -- (renseignées par l'administrateur)
+    -- ================================
+
+    expected_return_date DATE NOT NULL,
+
+    expected_return_time TIME NOT NULL,
+
+    -- ================================
+    -- Date et heure réelles de retour
+    -- ================================
+
+    actual_return_date DATE,
+
+    actual_return_time TIME,
+
+    -- ================================
+    -- Etat du prêt
+    -- ================================
+
+    status TEXT DEFAULT 'Emprunté',
+
+    reminder_sent INTEGER DEFAULT 0,
+
+    notes TEXT,
+
+    -- ================================
+    -- Administrateur ayant enregistré
+    -- le prêt
+    -- ================================
+
+    created_by INTEGER,
+
+    FOREIGN KEY(created_by)
+        REFERENCES users(id)
+
+);
+```
+
+## Explication des attributs
+
+| Attribut             | Description                                                       |
+| -------------------- | ----------------------------------------------------------------- |
+| document_name        | Nom du document physique.                                         |
+| borrower_name        | Nom de la personne qui emprunte le document.                      |
+| borrower_service     | Service de l'emprunteur.                                          |
+| borrower_phone       | Téléphone de l'emprunteur.                                        |
+| purpose              | Motif de l'emprunt.                                               |
+| loan_date            | Date de sortie. Remplie automatiquement avec la date du système.  |
+| loan_time            | Heure de sortie. Remplie automatiquement avec l'heure du système. |
+| expected_return_date | Date de retour choisie par l'administrateur.                      |
+| expected_return_time | Heure de retour choisie par l'administrateur.                     |
+| actual_return_date   | Date réelle du retour.                                            |
+| actual_return_time   | Heure réelle du retour.                                           |
+| status               | Emprunté, Retourné, En retard, etc.                               |
+| reminder_sent        | Indique si une alerte a déjà été envoyée (0 = non, 1 = oui).      |
+| notes                | Observations sur le prêt ou le retour.                            |
+| created_by           | Administrateur ayant enregistré le prêt.                          |
+
+## Pourquoi cette structure est préférable
+
+Elle permet notamment de :
+
+* effectuer des recherches uniquement par **date** ;
+* afficher facilement l'**heure** dans les tableaux sans avoir à découper un `DATETIME` ;
+* comparer séparément les dates et les heures pour les rappels ;
+* gérer simplement les retards.
+
+Par exemple, le **29/06/2026 à 08:00**, DigiBox peut vérifier :
+
+* si `expected_return_date = DATE('now','localtime')` et `expected_return_time > heure actuelle` → **document à rendre aujourd'hui** ;
+* si `expected_return_date < DATE('now','localtime')` → **document en retard** ;
+* si `expected_return_date = DATE('now','localtime')` et `expected_return_time < TIME('now','localtime')` → **document en retard depuis 
+aujourd'hui**.
+
+### Une amélioration supplémentaire
+
+Je te conseille également de remplacer le champ :
+
+```sql
+status TEXT DEFAULT 'Emprunté'
+```
+
+par un champ avec des valeurs bien définies, par exemple :
+
+```sql
+status TEXT DEFAULT 'Emprunté'
+CHECK (
+    status IN (
+        'Emprunté',
+        'Retourné',
+        'En retard',
+        'Perdu',
+        'Annulé'
+    )
+)
+```
+
+Ainsi, DigiBox n'autorisera que des états valides, ce qui rendra l'application plus robuste et plus facile à maintenir.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+C'est une meilleure approche pour un logiciel de gestion de documents physiques comme **DigiBox**.
+
+Je te conseille de supprimer complètement **`reminder_sent`** et de le remplacer par un attribut **`returned`** qui indique simplement si le document a été restitué ou non.
+
+## Nouvelle structure de la table
+
+```sql
+CREATE TABLE IF NOT EXISTS physical_document_loans (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    borrower_name TEXT NOT NULL,
+
+    borrower_service TEXT,
+
+    borrower_phone TEXT,
+
+    document_name TEXT NOT NULL,
+
+    document_reference TEXT,
+
+    reason TEXT,
+
+    loan_date DATE DEFAULT (DATE('now','localtime')),
+
+    loan_time TIME DEFAULT (TIME('now','localtime')),
+
+    expected_return DATE NOT NULL,
+
+    expected_return_time TIME NOT NULL,
+
+    returned INTEGER DEFAULT 0,
+
+    return_date DATE,
+
+    return_time TIME,
+
+    notes TEXT
+
+);
+```
+
+---
+
+# Signification de chaque attribut
+
+| Attribut             | Rôle                                      |
+| -------------------- | ----------------------------------------- |
+| id                   | Identifiant du prêt                       |
+| borrower_name        | Nom de la personne ayant pris le document |
+| borrower_service     | Service/Département                       |
+| borrower_phone       | Téléphone                                 |
+| document_name        | Nom du document physique                  |
+| document_reference   | Référence ou numéro d'archive             |
+| reason               | Motif de l'emprunt                        |
+| loan_date            | Date de sortie (automatique)              |
+| loan_time            | Heure de sortie (automatique)             |
+| expected_return      | Date prévue de retour                     |
+| expected_return_time | Heure prévue de retour                    |
+| returned             | 0 = Non rendu, 1 = Rendu                  |
+| return_date          | Date réelle de retour                     |
+| return_time          | Heure réelle de retour                    |
+| notes                | Observations                              |
+
+---
+
+# Fonctionnement du rappel
+
+À chaque ouverture de DigiBox (ou à intervalles réguliers pendant qu'il est ouvert), le logiciel exécute une requête similaire à :
+
+```sql
+SELECT *
+FROM physical_document_loans
+WHERE returned = 0
+AND (
+    expected_return < DATE('now','localtime')
+    OR
+    (
+        expected_return = DATE('now','localtime')
+        AND expected_return_time <= TIME('now','localtime')
+    )
+);
+```
+
+Cette requête renvoie tous les documents :
+
+* non restitués (`returned = 0`) ;
+* dont la date et l'heure de retour prévues sont atteintes ou dépassées.
+
+---
+
+# Exemple de scénario
+
+### 29 juin 2026
+
+L'admin prête un document.
+
+```text
+Document :
+Dossier Fiscal 2025
+
+Utilisateur :
+Jean
+
+Date de sortie :
+29/06/2026
+
+Heure de sortie :
+14:10
+
+Retour prévu :
+30/06/2026
+
+Heure prévue :
+15:00
+
+returned = 0
+```
+
+---
+
+### 30 juin 2026 à 15h00
+
+Le logiciel affiche automatiquement :
+
+```text
+🔔 RAPPEL
+
+Le document :
+
+"Dossier Fiscal 2025"
+
+emprunté par
+
+Jean
+
+devait être restitué aujourd'hui à 15h00.
+
+Le document n'a pas encore été rendu.
+```
+
+---
+
+### 15h30
+
+L'admin ferme puis rouvre DigiBox.
+
+Le rappel réapparaît car :
+
+```text
+returned = 0
+```
+
+---
+
+### 16h00
+
+Toujours le même rappel.
+
+---
+
+### Le lendemain
+
+Toujours le même rappel.
+
+---
+
+### Une semaine plus tard
+
+Toujours le même rappel.
+
+---
+
+### Le document est enfin rendu
+
+L'admin clique sur **"Marquer comme retourné"**.
+
+Le logiciel exécute :
+
+```sql
+UPDATE physical_document_loans
+SET
+    returned = 1,
+    return_date = DATE('now','localtime'),
+    return_time = TIME('now','localtime')
+WHERE id = ?;
+```
+
+La prochaine fois que DigiBox effectue la vérification, ce prêt n'est plus retourné par la requête, donc le rappel disparaît automatiquement.
+
+## Amélioration recommandée
+
+Pour offrir une meilleure expérience, tu peux aller plus loin et mettre en place **deux niveaux d'alerte** :
+
+* 🟡 **Retour prévu aujourd'hui** : lorsque la date est aujourd'hui et que l'heure approche ou est atteinte.
+* 🔴 **Document en retard** : lorsque la date ou l'heure de retour est dépassée et que `returned = 0`.
+
+L'administrateur peut ainsi distinguer immédiatement les documents qui doivent être rendus aujourd'hui de ceux qui sont déjà en retard. Cette logique est particulièrement adaptée à DigiBox, qui gère la traçabilité des documents physiques.
+
+
+🔔 système de rappel automatique réel (pop-up + timer Tkinter)
+
+
+Voici les champs que je n'ai pas
+Téléphone
+ il
+
+| Attribut             | Rôle                                      |
+| -------------------- | ----------------------------------------- |
+| id                   | Identifiant du prêt                       |
+| borrower_name        | Nom de la personne ayant pris le document |
+| borrower_service     | Service/Département                       |
+| borrower_phone       | Téléphone                                 |
+| document_name        | Nom du document physique                  |
+| document_reference   | Référence ou numéro d'archive             |
+| reason               | Motif de l'emprunt                        |
+| loan_date            | Date de sortie (automatique)              |
+| loan_time            | Heure de sortie (automatique)             |
+| expected_return      | Date prévue de retour                     |
+| expected_return_time | Heure prévue de retour                    |
+| returned             | 0 = Non rendu, 1 = Rendu                  |
+| return_date          | Date réelle de retour                     |
+| return_time          | Heure réelle de retour                    |
+| notes                | Observations                              |

@@ -1,11 +1,83 @@
+# # ================================
+# # 📦 APPLICATION : DigiBox
+# # ================================
+# import os
+# import sys
+
+# APP_NAME = "DigiBox"
+# # APP_NAME = "OpenArchive"
+# APP_VERSION = "1.0.0"
+# APP_AUTHOR = "NJECKY.SARL"
+# APP_DESCRIPTION = "Système de gestion et de traçabilité des archives physiques et numériques"
+
+# # ================================
+# # 📁 DOSSIER APPLICATION
+# # ================================
+# if getattr(sys, "frozen", False):
+#     # Exécutable PyInstaller
+#     BASE_DIR = os.path.dirname(sys.executable)
+# else:
+#     # Mode développement
+#     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+#     BASE_DIR = os.path.dirname(BASE_DIR)
+
+# # ================================
+# # 🗄️ BASE DE DONNÉES
+# # ================================
+
+# CONFIG_PATH = os.path.join(
+#     BASE_DIR,
+#     "config"
+# )
+
+# os.makedirs(CONFIG_PATH, exist_ok=True)
+
+# DB_PATH = os.path.join(
+#     CONFIG_PATH,
+#     "database.db"
+# )
+
+# # ================================
+# # 📁 RESSOURCES
+# # ================================
+# ASSETS_PATH = os.path.join(
+#     BASE_DIR,
+#     "assets"
+# )
+
+# IMAGES_PATH = os.path.join(
+#     ASSETS_PATH,
+#     "images"
+# )
+
+# FONTS_PATH = os.path.join(
+#     ASSETS_PATH,
+#     "fonts"
+# )
+
+# # ================================
+# # 📁 DOCUMENTS ARCHIVÉS
+# # ================================
+# ARCHIVE_PATH = os.path.join(
+#     BASE_DIR,
+#     "assets",
+#     "archives"
+# )
+
+# os.makedirs(
+#     ARCHIVE_PATH,
+#     exist_ok=True
+# )
 # ================================
 # 📦 APPLICATION : DigiBox
 # ================================
 import os
 import sys
 
-APP_NAME = "OpenArchive"
+APP_NAME = "DigiBox"
 APP_VERSION = "1.0.0"
+APP_AUTHOR = "NJECKY.SARL"
+APP_DESCRIPTION = "Système de gestion et de traçabilité des archives physiques et numériques"
 
 # ================================
 # 📁 DOSSIER APPLICATION
@@ -19,7 +91,7 @@ else:
     BASE_DIR = os.path.dirname(BASE_DIR)
 
 # ================================
-# 🗄️ DOSSIER DONNÉES UTILISATEUR
+# 📁 DONNÉES UTILISATEUR
 # ================================
 APP_DATA_DIR = os.path.join(
     os.getenv("APPDATA"),
@@ -58,7 +130,7 @@ FONTS_PATH = os.path.join(
 # 📁 DOCUMENTS ARCHIVÉS
 # ================================
 ARCHIVE_PATH = os.path.join(
-    APP_DATA_DIR,
+    ASSETS_PATH,
     "archives"
 )
 
@@ -66,7 +138,6 @@ os.makedirs(
     ARCHIVE_PATH,
     exist_ok=True
 )
-
 # ================================
 # 🎨 COULEURS (UI)
 # ================================

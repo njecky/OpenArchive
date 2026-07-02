@@ -115,6 +115,46 @@ def init_db():
     """)
     
     # ================================
+    # 📁 TABLE DOCUMENTS PHYSIQUES
+    # ================================
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS physical_document_loans (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            borrower_name TEXT NOT NULL,
+
+            borrower_service TEXT,
+
+            borrower_phone TEXT,
+
+            document_name TEXT NOT NULL,
+
+            document_reference TEXT,
+
+            reason TEXT,
+
+            loan_date DATE DEFAULT (DATE('now','localtime')),
+
+            loan_time TIME DEFAULT (TIME('now','localtime')),
+
+            expected_return DATE NOT NULL,
+
+            expected_return_time TIME NOT NULL,
+
+            returned INTEGER DEFAULT 0,
+
+            return_date DATE,
+
+            return_time TIME,
+
+            status TEXT DEFAULT 'Sorti',
+
+            notes TEXT
+
+        )
+    """)
+    # ================================
     # 🔐 INSERT ROLES
     # ================================
     roles = [
@@ -709,3 +749,126 @@ def search_document_activities_linear(
                 results.append(activity)
 
     return results
+
+# ================================
+# 📊 TOTAL DOCUMENTS PHYSIQUES
+# ================================
+def count_physical_documents():
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM physical_document_loans
+    """)
+
+    total = cursor.fetchone()[0]
+
+    conn.close()
+
+    return total
+
+
+# ================================
+# 📊 DOCUMENTS SORTIS
+# ================================
+def count_physical_out():
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM physical_document_loans
+        WHERE returned = 0
+    """)
+
+    total = cursor.fetchone()[0]
+
+    conn.close()
+
+    return total
+
+
+# ================================
+# 📊 DOCUMENTS RETOURNÉS
+# ================================
+def count_physical_returned():
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM physical_document_loans
+        WHERE returned = 1
+    """)
+
+    total = cursor.fetchone()[0]
+
+    conn.close()
+
+    return total
+
+
+# ================================
+# 📊 DOCUMENTS EN RETARD
+# ================================
+def count_physical_late():
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM physical_document_loans
+        WHERE returned = 0
+        AND DATE(expected_return) < DATE('now','localtime')
+    """)
+
+    total = cursor.fetchone()[0]
+
+    conn.close()
+
+    return total
+
+# ================================
+# 📊 RETOURS PRÉVUS AUJOURD'HUI
+# ================================
+def count_due_today():
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM physical_document_loans
+        WHERE returned = 0
+        AND expected_return = DATE('now','localtime')
+    """)
+
+    total = cursor.fetchone()[0]
+
+    conn.close()
+
+    return total
+
+# ================================
+# 📊 EMPRUNTEURS UNIQUES
+# ================================
+def count_unique_borrowers():
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(DISTINCT borrower_name)
+        FROM physical_document_loans
+    """)
+
+    total = cursor.fetchone()[0]
+
+    conn.close()
+
+    return total

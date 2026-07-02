@@ -68,9 +68,17 @@ class AdminDashboard:
         self.sidebar.pack_propagate(False)
 
         # LOGO
+        # tk.Label(
+        #     self.sidebar,
+        #     text="📁 ArchivaDesk",
+        #     bg=DARK_COLOR,
+        #     fg=WHITE,
+        #     font=("Helvetica", 14, "bold"),
+        #     pady=20
+        # ).pack(fill="x")
         tk.Label(
             self.sidebar,
-            text="📁 ArchivaDesk",
+            text=f"📁 {APP_NAME}",
             bg=DARK_COLOR,
             fg=WHITE,
             font=("Helvetica", 14, "bold"),
@@ -101,6 +109,10 @@ class AdminDashboard:
         self.create_menu("👥 Utilisateurs", self.show_users)
         self.create_menu("📁 Documents", self.show_documents)
         self.create_menu("📊 Activité Documents", self.show_document_logs)
+
+        # 🆕 MODULE DOCUMENTS PHYSIQUES
+        self.create_menu("📦 Documents Physiques", self.show_physical_documents)
+
         self.create_menu("⬆ Upload", self.upload_file)
         self.create_menu("🚪 Logout", self.logout)
 
@@ -3759,3 +3771,456 @@ class AdminDashboard:
             font=("Helvetica", 14, "bold")
         ).pack()
     
+    
+    # ================================
+    # 📦 DOCUMENTS PHYSIQUES
+    # ================================
+    def show_physical_documents(self):
+
+        self.clear_body()
+        self.page_title.config(text="📁 Gestion des Documents Physiques")
+
+        # ================================
+        # 🌟 CONTAINER PRINCIPAL
+        # ================================
+        container = tk.Frame(self.body, bg=LIGHT_COLOR)
+        container.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # ================================
+        # 📌 HEADER
+        # ================================
+        header = tk.Frame(container, bg=LIGHT_COLOR)
+        header.pack(fill="x")
+
+        tk.Label(
+            header,
+            text="📁 Gestion des Documents Physiques",
+            bg=LIGHT_COLOR,
+            fg=PRIMARY_COLOR,
+            font=("Helvetica", 16, "bold")
+        ).pack(anchor="w")
+
+        tk.Label(
+            header,
+            text="Suivi des sorties, retours et rappels des archives physiques",
+            bg=LIGHT_COLOR,
+            fg="gray",
+            font=("Helvetica", 9)
+        ).pack(anchor="w")
+
+        # ================================
+        # 📊 STATS CARDS
+        # ================================
+        stats_frame = tk.Frame(container, bg=LIGHT_COLOR)
+        stats_frame.pack(fill="x", pady=10)
+        
+        total = count_physical_documents()
+        out = count_physical_out()
+        returned = count_physical_returned()
+        late = count_physical_late()
+        due_today = count_due_today()
+        
+        self._log_card(stats_frame, "📂 Total", total, SECONDARY_COLOR)
+        self._log_card(stats_frame, "📤 Sortis", out, WARNING_COLOR)
+        self._log_card(stats_frame, "📥 Retours", returned, SUCCESS_COLOR)
+        self._log_card(stats_frame, "⏰ Retards", late, DANGER_COLOR)
+        self._log_card(stats_frame, "🔔 Aujourd'hui", due_today, PRIMARY_COLOR)
+
+        # self._log_card(stats_frame, "📂 Total", "125", SECONDARY_COLOR)
+        # self._log_card(stats_frame, "📤 Sortis", "18", WARNING_COLOR)
+        # self._log_card(stats_frame, "📥 Retours", "95", SUCCESS_COLOR)
+        # self._log_card(stats_frame, "⏰ Retards", "12", DANGER_COLOR)
+        # self._log_card(stats_frame, "🔔 Rappels", "7", PRIMARY_COLOR)
+
+        # ================================
+        # 🔍 ZONE DE RECHERCHE
+        # ================================
+        search_frame = tk.Frame(container, bg=WHITE, bd=1, relief="solid")
+        search_frame.pack(fill="x", pady=10)
+
+        tk.Entry(
+            search_frame,
+            font=("Helvetica", 10),
+            bd=0
+        ).pack(side="left", padx=10, pady=8, fill="x", expand=True)
+
+        ttk.Combobox(
+            search_frame,
+            values=["Tous", "Sorti", "Retourné", "En retard"],
+            state="readonly",
+            width=15
+        ).pack(side="left", padx=5)
+
+        ttk.Combobox(
+            search_frame,
+            values=["Tous"],
+            state="readonly",
+            width=15
+        ).pack(side="left", padx=5)
+
+        tk.Button(
+            search_frame,
+            text="🔄 Actualiser",
+            bg=SECONDARY_COLOR,
+            fg=WHITE,
+            bd=0,
+            padx=10
+        ).pack(side="right", padx=10)
+
+        # ================================
+        # 🎛 ACTIONS
+        # ================================
+        actions = tk.Frame(container, bg=LIGHT_COLOR)
+        actions.pack(fill="x", pady=10)
+
+        tk.Button(actions,text="➕ Nouvelle sortie",bg=PRIMARY_COLOR,fg=WHITE,command=self.open_new_sortie_form).pack(side="left", padx=5)
+        tk.Button(actions, text="📥 Retour document", bg=SUCCESS_COLOR, fg=WHITE).pack(side="left", padx=5)
+        tk.Button(actions, text="🔔 Rappels", bg=WARNING_COLOR, fg=WHITE).pack(side="left", padx=5)
+        tk.Button(actions, text="🖨 Export PDF", bg=SECONDARY_COLOR, fg=WHITE).pack(side="left", padx=5)
+        tk.Button(actions, text="📊 Statistiques", bg=DARK_COLOR, fg=WHITE).pack(side="left", padx=5)
+
+        # ================================
+        # 📋 TABLE (FULL VIEW FIX)
+        # ================================
+
+        table_frame = tk.Frame(container, bg=WHITE)
+        table_frame.pack(fill="both", expand=True)
+
+        columns = (
+            "N°", "Document", "Référence", "Utilisateur",
+            "Date sortie", "Heure", "Retour prévu",
+            "Heure retour", "Statut"
+        )
+
+        # ================================
+        # 🧾 TREEVIEW
+        # ================================
+        table = ttk.Treeview(
+            table_frame,
+            columns=columns,
+            show="headings"
+        )
+
+        # ================================
+        # 📏 LARGEUR DES COLONNES (OPTIMISÉ)
+        # ================================
+        widths = {
+            "N°": 50,
+            "Document": 200,
+            "Référence": 120,
+            "Utilisateur": 150,
+            "Date sortie": 110,
+            "Heure": 80,
+            "Retour prévu": 120,
+            "Heure retour": 120,
+            "Statut": 100
+        }
+
+        for col in columns:
+            table.heading(col, text=col)
+            table.column(col, width=widths.get(col, 100), anchor="center")
+
+        # ================================
+        # 📌 DONNÉES EXEMPLE
+        # ================================
+        data = [
+            (1, "Dossier RH 2025", "RH-2025-001", "Jean Dupont",
+            "29/06/2026", "14:30", "30/06/2026", "15:00", "Sorti"),
+
+            (2, "Contrat Client A", "CT-2026-015", "Paul",
+            "28/06/2026", "09:15", "29/06/2026", "10:00", "En retard"),
+
+            (3, "Facture 2024", "FC-2024-122", "Marie",
+            "25/06/2026", "11:00", "25/06/2026", "16:00", "Retourné"),
+        ]
+
+        for row in data:
+            table.insert("", "end", values=row)
+
+        # ================================
+        # 📜 SCROLLBARS (IMPORTANT)
+        # ================================
+
+        # Vertical scrollbar
+        scroll_y = ttk.Scrollbar(table_frame, orient="vertical", command=table.yview)
+        table.configure(yscrollcommand=scroll_y.set)
+
+        # Horizontal scrollbar
+        scroll_x = ttk.Scrollbar(table_frame, orient="horizontal", command=table.xview)
+        table.configure(xscrollcommand=scroll_x.set)
+
+        # ================================
+        # 📦 PACK LAYOUT
+        # ================================
+        table.pack(side="top", fill="both", expand=True)
+        scroll_y.pack(side="right", fill="y")
+        scroll_x.pack(side="bottom", fill="x")
+    
+    # ================================
+    # Cette section gère les actions principales du formulaire :
+    # - Validation des données saisies
+    # - Enregistrement de la nouvelle sortie de document
+    # - Génération automatique d’un identifiant unique
+    # - Ajout dynamique des données dans le tableau principal (Treeview)
+    # - Affichage des messages de succès ou d’erreur
+    # - Fermeture sécurisée du formulaire après enregistrement
+    # ================================
+    def open_new_sortie_form(self):
+
+        form = tk.Toplevel(self.body)
+        form.title("➕ Nouvelle sortie de document")
+        form.geometry("650x520")
+        form.minsize(600, 480)
+        form.configure(bg=LIGHT_COLOR)
+        form.transient(self.body)
+        form.grab_set()
+
+        # ================================
+        # HEADER
+        # ================================
+        header = tk.Frame(form, bg=PRIMARY_COLOR)
+        header.pack(fill="x")
+
+        tk.Label(
+            header,
+            text="📤 Nouvelle sortie de document physique",
+            bg=PRIMARY_COLOR,
+            fg=WHITE,
+            font=("Helvetica", 14, "bold")
+        ).pack(anchor="w", padx=10, pady=10)
+
+        # ================================
+        # SCROLLABLE AREA
+        # ================================
+        canvas = tk.Canvas(form, bg=LIGHT_COLOR, highlightthickness=0)
+        scrollbar = tk.Scrollbar(form, orient="vertical", command=canvas.yview)
+        scroll_frame = tk.Frame(canvas, bg=LIGHT_COLOR)
+
+        scroll_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # ================================
+        # STYLE HELPERS
+        # ================================
+        def add_placeholder(entry, text):
+            entry.insert(0, text)
+            entry.config(fg="gray")
+
+            def on_focus_in(e):
+                if entry.get() == text:
+                    entry.delete(0, "end")
+                    entry.config(fg="black")
+
+            def on_focus_out(e):
+                if entry.get() == "":
+                    entry.insert(0, text)
+                    entry.config(fg="gray")
+
+            entry.bind("<FocusIn>", on_focus_in)
+            entry.bind("<FocusOut>", on_focus_out)
+
+        def hover(btn, color1, color2):
+            btn.bind("<Enter>", lambda e: btn.config(bg=color2))
+            btn.bind("<Leave>", lambda e: btn.config(bg=color1))
+
+        def mark_error(entry, is_error):
+            entry.config(highlightthickness=2 if is_error else 0,
+                        highlightbackground="red" if is_error else LIGHT_COLOR)
+
+        # ================================
+        # SECTION 1 - EMPREUNTEUR
+        # ================================
+        sec1 = ttk.LabelFrame(scroll_frame, text="👤 Informations emprunteur")
+        sec1.pack(fill="x", padx=15, pady=10)
+
+        sec1.grid_columnconfigure(0, weight=1)
+        sec1.grid_columnconfigure(1, weight=1)
+        sec1.grid_columnconfigure(2, weight=1)
+
+        tk.Label(sec1, text="Nom").grid(row=0, column=0, sticky="w", padx=5, pady=2)
+        tk.Label(sec1, text="Service").grid(row=0, column=1, sticky="w", padx=5, pady=2)
+        tk.Label(sec1, text="Téléphone").grid(row=0, column=2, sticky="w", padx=5, pady=2)
+
+        borrower_name = tk.Entry(sec1)
+        borrower_service = tk.Entry(sec1)
+        borrower_phone = tk.Entry(sec1)
+
+        borrower_name.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+        borrower_service.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+        borrower_phone.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
+
+        add_placeholder(borrower_name, "Ex: Jean Dupont")
+        add_placeholder(borrower_service, "Ex: RH")
+        add_placeholder(borrower_phone, "Ex: 237XX XXX XXX")
+        
+        # ================================
+        # VALIDATION TÉLÉPHONE (CORRIGÉ)
+        # ================================
+        def validate_phone(char, current):
+            return (char.isdigit() or char == "") and len(current) <= 9
+
+            vcmd = (form.register(validate_phone), "%S", "%P")
+            borrower_phone.config(validate="key", validatecommand=vcmd)
+        
+        # TAB fluide
+        borrower_name.focus()
+
+        # ================================
+        # SECTION 2
+        # ================================
+        sec2 = ttk.LabelFrame(scroll_frame, text="📄 Document")
+        sec2.pack(fill="x", padx=15, pady=10)
+
+        sec2.grid_columnconfigure(0, weight=1)
+        sec2.grid_columnconfigure(1, weight=1)
+
+        tk.Label(sec2, text="Nom document").grid(row=0, column=0, sticky="w", padx=5)
+        tk.Label(sec2, text="Référence").grid(row=0, column=1, sticky="w", padx=5)
+
+        document_name = tk.Entry(sec2)
+        document_reference = tk.Entry(sec2)
+
+        document_name.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+        document_reference.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+
+        add_placeholder(document_name, "Ex: Dossier RH 2025")
+        add_placeholder(document_reference, "Ex: RH-2025-001")
+
+        # ================================
+        # SECTION 3
+        # ================================
+        sec3 = ttk.LabelFrame(scroll_frame, text="⏰ Retour & Motif")
+        sec3.pack(fill="x", padx=15, pady=10)
+
+        sec3.grid_columnconfigure(0, weight=1)
+        sec3.grid_columnconfigure(1, weight=1)
+
+        tk.Label(sec3, text="Motif").grid(row=0, column=0, sticky="w", padx=5)
+        tk.Label(sec3, text="Date retour").grid(row=0, column=1, sticky="w", padx=5)
+
+        reason = tk.Entry(sec3)
+        expected_return = tk.Entry(sec3)
+
+        reason.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+        expected_return.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+
+        add_placeholder(reason, "Ex: Consultation")
+        add_placeholder(expected_return, "YYYY-MM-DD")
+
+        tk.Label(sec3, text="Heure retour").grid(row=2, column=0, sticky="w", padx=5)
+
+        expected_return_time = tk.Entry(sec3)
+        expected_return_time.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
+
+        add_placeholder(expected_return_time, "HH:MM")
+
+        # ================================
+        # SECTION 4
+        # ================================
+        sec4 = ttk.LabelFrame(scroll_frame, text="📝 Notes")
+        sec4.pack(fill="x", padx=15, pady=10)
+
+        notes = tk.Entry(sec4)
+        notes.pack(fill="x", padx=5, pady=5)
+
+        add_placeholder(notes, "Notes supplémentaires...")
+
+        # ================================
+        # ACTIONS
+        # ================================
+        actions = tk.Frame(form, bg=LIGHT_COLOR)
+        actions.pack(fill="x", pady=10)
+
+        def save():
+
+            fields = [
+                borrower_name,
+                borrower_phone,   # ✅ ajouté
+                document_name,
+                expected_return,
+                expected_return_time
+            ]
+
+            valid = True
+
+            for f in fields:
+                is_empty = f.get() == "" or f.get().startswith("Ex:")
+                mark_error(f, is_empty)
+                if is_empty:
+                    valid = False
+
+            if not valid:
+                tk.messagebox.showerror("Erreur", "Champs obligatoires manquants")
+                return
+
+            try:
+                import sqlite3
+
+                conn = sqlite3.connect(DB_PATH)
+                cursor = conn.cursor()
+
+                cursor.execute("""
+                    INSERT INTO physical_document_loans (
+                        borrower_name,
+                        borrower_service,
+                        borrower_phone,
+                        document_name,
+                        document_reference,
+                        reason,
+                        expected_return,
+                        expected_return_time,
+                        notes
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                        borrower_name.get(),
+                        borrower_service.get(),
+                        borrower_phone.get(),
+                        document_name.get(),
+                        document_reference.get(),
+                        reason.get(),
+                        expected_return.get(),
+                        expected_return_time.get(),
+                        notes.get()
+                    ))
+
+                conn.commit()
+                conn.close()
+
+                tk.messagebox.showinfo("Succès", "Sortie enregistrée")
+                form.destroy()
+
+                if hasattr(self, "refresh_physical_table"):
+                    self.refresh_physical_table()
+
+            except Exception as e:
+                tk.messagebox.showerror("Erreur DB", str(e))
+
+        btn_save = tk.Button(
+            actions,
+            text="💾 Enregistrer",
+            bg=SUCCESS_COLOR,
+            fg=WHITE,
+            command=save
+        )
+        btn_save.pack(side="right", padx=10)
+
+        btn_close = tk.Button(
+            actions,
+            text="❌ Fermer",
+            bg=DANGER_COLOR,
+            fg=WHITE,
+            command=form.destroy
+        )
+        btn_close.pack(side="right")
+
+        # HOVER ANIMATION
+        hover(btn_save, SUCCESS_COLOR, "#27AE60")
+        hover(btn_close, DANGER_COLOR, "#C0392B")

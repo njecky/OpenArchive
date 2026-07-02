@@ -17,6 +17,7 @@ def main():
 
     # INITIALISER SQLITE
     init_db()
+    print(DB_PATH)
 
     # Fenêtre principale
     root = tk.Tk()
