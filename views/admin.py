@@ -10,11 +10,14 @@ import os
 import shutil
 import uuid
 import subprocess
-from datetime import datetime
+from datetime import datetime, date
 from models.model import *
 from controllers.user_controller import *
 from config.function import *
 from views.document_viewer import *
+from views.return_documents import *
+from views.notification_center import *
+import re
 
 try:
     import win32print
@@ -27,7 +30,6 @@ except:
 class AdminDashboard:
 
     def __init__(self, root, nom):
-
         self.root = root
         self.nom = nom
 
@@ -160,7 +162,237 @@ class AdminDashboard:
 
         # DEFAULT VIEW
         self.show_dashboard()
+        
+        # Vérifie les retours après le chargement de l'interface
+        self.root.after(1500, self.check_due_today_notifications)
+        
+    # ================================
+    # 🔔 VÉRIFIER LES DOCUMENTS À RESTITUER AUJOURD'HUI
+    # ================================
+    def check_due_today_notifications(self):
+        # print(">>> Vérification des documents à restituer")
+        """
+        les documents dont la restitution est prévue aujourd'hui.
+        Si un ou plusieurs documents sont trouvés,
+        une notification persistante est affichée.
+        """
 
+        try:
+
+            documents = get_due_today_documents()
+
+            # Aucun document à restituer
+            if not documents:
+                return
+
+            # Afficher la première notification
+            self.show_due_today_popup(documents[0])
+
+            # Évite d'ouvrir plusieurs fois la même popup
+            if hasattr(self, "notification_popup"):
+
+                if self.notification_popup.winfo_exists():
+                    return
+
+            # Affiche la fenêtre de notifications
+            self.show_due_today_popup(documents)
+
+        except Exception as e:
+
+            print("Erreur notification :", e)
+        finally:
+
+            # Nouvelle vérification dans 60 secondes
+            self.root.after(
+                60000,
+                self.check_due_today_notifications
+            )
+        
+    # ================================
+    # 🔔 POPUP - DOCUMENT À RESTITUER AUJOURD'HUI
+    # ================================
+    def show_due_today_popup(self, doc):
+        
+        # ================================
+        # 📄 DONNÉES DE L'EMPRUNT
+        # ================================
+        loan_id = doc[0]
+        document = doc[1]
+        borrower = doc[2]
+        service = doc[3]
+        date = doc[4]
+        heure = doc[5]
+
+        # ================================
+        # 🪟 CRÉATION DE LA FENÊTRE POPUP
+        # ================================
+        self.notification_popup = tk.Toplevel(self.root)
+        popup = self.notification_popup
+
+        popup.title("Documents à restituer")
+        popup.geometry("430x330")
+        popup.configure(bg="white")
+
+        # Toujours afficher au premier plan
+        popup.attributes("-topmost", True)
+
+        # Empêche le redimensionnement
+        popup.resizable(False, False)
+
+        # Rend la fenêtre modale
+        popup.grab_set()
+
+        # ================================
+        # 🔶 EN-TÊTE DE LA NOTIFICATION
+        # ================================
+        header = tk.Frame(
+            popup,
+            bg="#F59E0B",
+            height=60
+        )
+
+        header.pack(fill="x")
+
+        tk.Label(
+            header,
+            text="🔔 Documents à restituer aujourd'hui",
+            bg="#F59E0B",
+            fg="white",
+            font=("Segoe UI", 14, "bold")
+        ).pack(pady=18)
+
+        # ================================
+        # 📦 CONTENU PRINCIPAL
+        # ================================
+        body = tk.Frame(
+            popup,
+            bg="white"
+        )
+
+        body.pack(
+            fill="both",
+            expand=True,
+            padx=20,
+            pady=15
+        )
+
+        # ================================
+        # 📄 NOM DU DOCUMENT
+        # ================================
+        tk.Label(
+            body,
+            text=f"📄 {document}",
+            font=("Segoe UI", 12, "bold"),
+            bg="white",
+            anchor="w"
+        ).pack(fill="x", pady=5)
+
+        # ================================
+        # 👤 INFORMATIONS SUR L'EMPRUNTEUR
+        # ================================
+        tk.Label(
+            body,
+            text=f"👤 Emprunteur : {borrower}",
+            bg="white",
+            anchor="w"
+        ).pack(fill="x")
+
+        tk.Label(
+            body,
+            text=f"🏢 Service : {service}",
+            bg="white",
+            anchor="w"
+        ).pack(fill="x")
+
+        # ================================
+        # 📅 DATE ET HEURE DE RETOUR PRÉVUES
+        # ================================
+        tk.Label(
+            body,
+            text=f"📅 Retour prévu :\n{date} à {heure}",
+            bg="white",
+            justify="left",
+            anchor="w"
+        ).pack(fill="x", pady=10)
+
+        # ================================
+        # ⚠️ MESSAGE D'ALERTE
+        # ================================
+        tk.Label(
+            body,
+            text="⚠ Ce document n'a pas encore été restitué.",
+            fg="red",
+            bg="white",
+            font=("Segoe UI", 10, "bold")
+        ).pack(anchor="w")
+
+        # ================================
+        # 🎛️ BOUTONS D'ACTION
+        # ================================
+        # Voir le document
+        # Marquer comme restitué
+        # Plus tard
+        Button(
+            buttons,
+            text="👁 Voir",
+            bg="#2563EB",
+            fg="white",
+            relief="flat",
+            cursor="hand2",
+            width=12,
+            command=view_document
+        ).pack(side="left", padx=5)
+
+        Button(
+            buttons,
+            text="✔ Restitué",
+            bg="#16A34A",
+            fg="white",
+            relief="flat",
+            cursor="hand2",
+            width=14,
+            command=mark_returned
+        ).pack(side="left", padx=5)
+
+        Button(
+            buttons,
+            text="⏰ Plus tard",
+            bg="#E5E7EB",
+            fg="#374151",
+            relief="flat",
+            cursor="hand2",
+            width=12,
+            command=remind_later
+        ).pack(side="left", padx=5)
+        
+        def view_document():
+
+            popup.destroy()
+
+            self.show_physical_documents()
+        
+        def mark_returned():
+
+            if messagebox.askyesno(
+                "Confirmation",
+                "Marquer ce document comme restitué ?"
+            ):
+
+                mark_document_returned(loan_id)
+
+                popup.destroy()
+
+                self.show_physical_documents()
+                
+        def remind_later():
+            popup.destroy()
+            
+        
+        def close_popup():
+            self.notification_popup = None
+            popup.destroy()
+            popup.protocol("WM_DELETE_WINDOW", close_popup)
+        
     # ================================
     # 📌 MENU ITEM (MODERNE)
     # ================================
@@ -3874,8 +4106,9 @@ class AdminDashboard:
         actions.pack(fill="x", pady=10)
 
         tk.Button(actions,text="➕ Nouvelle sortie",bg=PRIMARY_COLOR,fg=WHITE,command=self.open_new_sortie_form).pack(side="left", padx=5)
-        tk.Button(actions, text="📥 Retour document", bg=SUCCESS_COLOR, fg=WHITE).pack(side="left", padx=5)
-        tk.Button(actions, text="🔔 Rappels", bg=WARNING_COLOR, fg=WHITE).pack(side="left", padx=5)
+        btn_return = tk.Button(actions,text="📥 Retour document",bg=SUCCESS_COLOR,fg=WHITE,command=self.open_return_documents)
+        btn_return.pack(side="left", padx=5)
+        tk.Button(actions,text="🔔 Rappels",bg=WARNING_COLOR,fg=WHITE,command=self.open_notifications).pack(side="left", padx=5)
         tk.Button(actions, text="🖨 Export PDF", bg=SECONDARY_COLOR, fg=WHITE).pack(side="left", padx=5)
         tk.Button(actions, text="📊 Statistiques", bg=DARK_COLOR, fg=WHITE).pack(side="left", padx=5)
 
@@ -3923,16 +4156,7 @@ class AdminDashboard:
         # ================================
         # 📌 DONNÉES EXEMPLE
         # ================================
-        data = [
-            (1, "Dossier RH 2025", "RH-2025-001", "Jean Dupont",
-            "29/06/2026", "14:30", "30/06/2026", "15:00", "Sorti"),
-
-            (2, "Contrat Client A", "CT-2026-015", "Paul",
-            "28/06/2026", "09:15", "29/06/2026", "10:00", "En retard"),
-
-            (3, "Facture 2024", "FC-2024-122", "Marie",
-            "25/06/2026", "11:00", "25/06/2026", "16:00", "Retourné"),
-        ]
+        data = get_physical_document_loans()
 
         for row in data:
             table.insert("", "end", values=row)
@@ -3943,19 +4167,32 @@ class AdminDashboard:
 
         # Vertical scrollbar
         scroll_y = ttk.Scrollbar(table_frame, orient="vertical", command=table.yview)
-        table.configure(yscrollcommand=scroll_y.set)
-
-        # Horizontal scrollbar
         scroll_x = ttk.Scrollbar(table_frame, orient="horizontal", command=table.xview)
-        table.configure(xscrollcommand=scroll_x.set)
+
+        table.configure(
+        yscrollcommand=scroll_y.set,
+        xscrollcommand=scroll_x.set
+        )
+        
+        # ================================
+        # 📌 GRID LAYOUT (IMPORTANT)
+        # ================================
+        table.grid(row=0, column=0, sticky="nsew")
+        scroll_y.grid(row=0, column=1, sticky="ns")
+        scroll_x.grid(row=1, column=0, sticky="ew")
 
         # ================================
-        # 📦 PACK LAYOUT
+        # 🔧 CONFIG GRID EXPANSION
         # ================================
-        table.pack(side="top", fill="both", expand=True)
-        scroll_y.pack(side="right", fill="y")
-        scroll_x.pack(side="bottom", fill="x")
+        table_frame.grid_rowconfigure(0, weight=1)
+        table_frame.grid_columnconfigure(0, weight=1)
     
+    
+    def open_return_documents(self):
+        ReturnDocumentsWindow(self.root)
+        
+    def open_notifications(self):
+        NotificationCenter(self.root)
     # ================================
     # Cette section gère les actions principales du formulaire :
     # - Validation des données saisies
@@ -4062,6 +4299,37 @@ class AdminDashboard:
         add_placeholder(borrower_phone, "Ex: 237XX XXX XXX")
         
         # ================================
+        # VALIDATION DATE
+        # Format : YYYY-MM-DD
+        # ================================
+        def validate_date(date_str):
+
+            try:
+                input_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+                # Interdire une date passée
+                if input_date < date.today():
+                    return False, "La date de retour ne peut pas être antérieure à aujourd'hui."
+
+                return True, ""
+
+            except ValueError:
+                return False, "La date doit être au format YYYY-MM-DD."
+
+
+        # ================================
+        # VALIDATION HEURE
+        # Format : HH:MM
+        # ================================
+        def validate_time(time_str):
+
+            try:
+                datetime.strptime(time_str, "%H:%M")
+                return True, ""
+
+            except ValueError:
+                return False, "L'heure doit être au format HH:MM (ex : 14:30)."
+        # ================================
         # VALIDATION TÉLÉPHONE (CORRIGÉ)
         # ================================
         def validate_phone(char, current):
@@ -4160,9 +4428,35 @@ class AdminDashboard:
             if not valid:
                 tk.messagebox.showerror("Erreur", "Champs obligatoires manquants")
                 return
+            
+            # ================================
+            # VALIDATION DATE
+            # ================================
+            is_valid, message = validate_date(expected_return.get())
 
+            if not is_valid:
+                mark_error(expected_return, True)
+                tk.messagebox.showerror("Date invalide", message)
+                expected_return.focus_set()
+                return
+            else:
+                mark_error(expected_return, False)
+
+
+            # ================================
+            # VALIDATION HEURE
+            # ================================
+            is_valid, message = validate_time(expected_return_time.get())
+
+            if not is_valid:
+                mark_error(expected_return_time, True)
+                tk.messagebox.showerror("Heure invalide", message)
+                expected_return_time.focus_set()
+                return
+            else:
+                mark_error(expected_return_time, False)
             try:
-                import sqlite3
+                # import sqlite3
 
                 conn = sqlite3.connect(DB_PATH)
                 cursor = conn.cursor()

@@ -154,6 +154,30 @@ def init_db():
 
         )
     """)
+    
+    # =====================================================
+    # 🧪 MODE DÉVELOPPEMENT UNIQUEMENT
+    # -----------------------------------------------------
+    # Ce bloc supprime automatiquement tous les emprunts
+    # de documents physiques à chaque démarrage de
+    # l'application et réinitialise l'AUTOINCREMENT.
+    #
+    # ⚠️ IMPORTANT :
+    # À SUPPRIMER ou À COMMENTER avant la mise en production,
+    # sinon toutes les données seront effacées à chaque lancement.
+    # =====================================================
+
+
+    # Supprime tous les enregistrements
+    # cursor.execute("""
+    #     DELETE FROM physical_document_loans
+    # """)
+
+    # # Réinitialise l'identifiant AUTO_INCREMENT (le prochain ID sera 1)
+    # cursor.execute("""
+    #     DELETE FROM sqlite_sequence
+    #     WHERE name = 'physical_document_loans'
+    # """)
     # ================================
     # 🔐 INSERT ROLES
     # ================================
@@ -872,3 +896,135 @@ def count_unique_borrowers():
     conn.close()
 
     return total
+
+
+# ================================
+# 📌 CHARGER LES EMPRUNTS DE DOCUMENTS PHYSIQUES
+# ================================
+def get_physical_document_loans():
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            id,
+            document_name,
+            document_reference,
+            borrower_name,
+
+            strftime('%d/%m/%Y', loan_date) AS loan_date,
+
+            loan_time,
+
+            strftime('%d/%m/%Y', expected_return) AS expected_return,
+
+            expected_return_time,
+
+            status
+
+        FROM physical_document_loans
+
+        ORDER BY id DESC
+    """)
+
+    data = cursor.fetchall()
+
+    conn.close()
+
+    return data
+
+# ================================
+# 🔔 DOCUMENTS À RESTITUER AUJOURD'HUI
+# ================================
+def get_due_today_documents():
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+
+        SELECT
+            id,
+            borrower_name,
+            borrower_service,
+            borrower_phone,
+            document_name,
+            expected_return,
+            expected_return_time
+
+        FROM physical_document_loans
+
+        WHERE returned = 0
+        AND expected_return = DATE('now','localtime')
+
+        ORDER BY expected_return_time
+
+    """)
+
+    data = cursor.fetchall()
+
+    conn.close()
+
+    return data
+
+
+# ================================
+# ✅ MARQUER UN DOCUMENT COMME RESTITUÉ
+# ================================
+def mark_document_returned(loan_id):
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE physical_document_loans
+        SET
+            returned = 1,
+            status = 'Retourné',
+            actual_return = DATE('now','localtime')
+        WHERE id=?
+    """,(loan_id,))
+
+    conn.commit()
+    conn.close()
+
+# ================================
+# 🗑️ SUPPRIMER TOUS LES EMPRUNTS
+# (Réinitialise également l'AUTOINCREMENT)
+# ================================
+# def clear_physical_document_loans():
+
+#     conn = connect_db()
+#     cursor = conn.cursor()
+
+#     try:
+#         # Supprime toutes les lignes
+#         cursor.execute("""
+#             DELETE FROM physical_document_loans
+#         """)
+
+#         # Réinitialise le compteur AUTOINCREMENT
+#         cursor.execute("""
+#             DELETE FROM sqlite_sequence
+#             WHERE name = 'physical_document_loans'
+#         """)
+
+#         conn.commit()
+
+#         return {
+#             "success": True,
+#             "message": "Tous les emprunts ont été supprimés."
+#         }
+
+#     except Exception as e:
+
+#         conn.rollback()
+
+#         return {
+#             "success": False,
+#             "message": str(e)
+#         }
+
+#     finally:
+#         conn.close()

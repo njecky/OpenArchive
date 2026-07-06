@@ -10,6 +10,12 @@ from controllers.auth_controller import login_user
 class LoginWindow:
     def __init__(self, root):
         self.root = root
+        
+        # ================================
+        # 🔐 ÉTAT DE LA CONNEXION
+        # ================================
+        # Empêche plusieurs tentatives de connexion simultanées
+        self.is_logging_in = False
 
         # Couleur de fond principale
         self.root.configure(bg=PRIMARY_COLOR)
@@ -67,7 +73,7 @@ class LoginWindow:
         # ================================
         # Bouton Connexion
         # ================================
-        login_btn = tk.Button(
+        self.login_btn = tk.Button(
             card,
             text="Se connecter",
             bg=SECONDARY_COLOR,
@@ -79,9 +85,13 @@ class LoginWindow:
             activebackground=PRIMARY_COLOR,
             cursor="hand2"
         )
-        login_btn.pack(pady=15)
+        self.login_btn.pack(pady=15)
         # Touche Entrée clavier
-        self.root.bind("<Return>", lambda event: self.login())
+        # self.root.bind("<Return>", lambda event: self.login())
+        # ================================
+        # ⌨️ TOUCHE ENTRÉE
+        # ================================
+        self.root.bind("<Return>", self.on_enter_pressed)
 
         # Message
         self.message = tk.Label(card, text="", fg=DANGER_COLOR, bg=WHITE, font=("Helvetica", 10))
@@ -120,120 +130,116 @@ class LoginWindow:
         if entry.get() == "":
             entry.insert(0, placeholder)
             entry.config(fg="gray")
+            
+            
+    # ================================
+    # ⌨️ GESTION DE LA TOUCHE ENTRÉE
+    # ================================
+    def on_enter_pressed(self, event=None):
+
+        if not self.is_logging_in:
+            self.login()
 
     # ================================
-    # 🔐 Logique Login
+    # 🔐 LOGIQUE DE CONNEXION
     # ================================
     def login(self):
-        login = self.login_entry.get()
-        password = self.password_entry.get()
-        
-        # Vérifier placeholders
+
+        # Évite les doubles clics
+        if self.is_logging_in:
+            return
+
+        self.is_logging_in = True
+
+        self.login_btn.config(state="disabled")
+
+        login = self.login_entry.get().strip()
+        password = self.password_entry.get().strip()
+
+        # ================================
+        # VÉRIFICATION DES CHAMPS
+        # ================================
         if login in ("", "Login") or password in ("", "Mot de passe"):
+
             self.message.config(
-                text="Veuillez remplir tous les champs",
+                text="Veuillez remplir tous les champs.",
                 fg=DANGER_COLOR
             )
+
+            self.login_btn.config(state="normal")
+            self.is_logging_in = False
 
             return
 
         # ================================
-        # 🔍 AUTH SQLITE
+        # AUTHENTIFICATION
         # ================================
         user = login_user(login, password)
 
-        # ================================
-        # ✅ UTILISATEUR TROUVÉ
-        # ================================
-        if user:
-            # infos user
-            user_id = user[0]
-            nom = user[1]
-            username = user[2]
-            role = user[3]
+        if not user:
 
-            print("ID :", user_id)
-            print("Nom :", nom)
-            print("Login :", username)
-            print("Rôle :", role)
-            
-            # Message succès
             self.message.config(
-                text="Connexion réussie",
-                fg=SUCCESS_COLOR
-            )
-            
-            # attendre un peu avant redirection
-            self.root.after(
-                500,
-                lambda: self.redirect_user(role, nom)
-            )
-
-        # ================================
-        # ❌ ECHEC LOGIN
-        # ================================
-        else:
-            self.message.config(
-                text="Login ou mot de passe incorrect",
+                text="Login ou mot de passe incorrect.",
                 fg=DANGER_COLOR
             )
+
+            self.login_btn.config(state="normal")
+            self.is_logging_in = False
+            return
+
         # ================================
-        # 🔍 AUTHENTIFICATION
+        # CONNEXION RÉUSSIE
         # ================================
-        user = login_user(login, password)
+        user_id, nom, username, role = user[:4]
 
-        if user:
+        print("ID :", user_id)
+        print("Nom :", nom)
+        print("Login :", username)
+        print("Rôle :", role)
 
-            self.message.config(
-                text="Connexion réussie",
-                fg=SUCCESS_COLOR
-            )
+        self.message.config(
+            text="Connexion réussie",
+            fg=SUCCESS_COLOR
+        )
 
-            # user infos
-            user_id = user[0]
-            nom = user[1]
-            username = user[2]
-            role = user[3]
+        # Désactive la touche Entrée
+        self.root.unbind("<Return>")
 
-            print("Utilisateur :", nom)
-            print("Rôle :", role)
-
-            # Redirection
-            self.redirect_user(role, nom)
-
-        else:
-
-            self.message.config(
-                text="Login ou mot de passe incorrect",
-                fg=DANGER_COLOR
-            )
+        # Redirection
+        self.root.after(
+            500,
+            lambda: self.redirect_user(role, nom)
+        )
+        
     # ================================
-    # 🚀 REDIRECTION SELON ROLE
+    # 🚀 REDIRECTION SELON LE RÔLE
     # ================================
     def redirect_user(self, role, nom):
-        # Nettoyer fenêtre
+
+        # Nettoyage de la fenêtre
         for widget in self.root.winfo_children():
             widget.destroy()
 
         # ================================
-        # 👑 ADMIN
+        # ADMIN
         # ================================
         if role == "Admin":
+
             from views.admin import AdminDashboard
             AdminDashboard(self.root, nom)
 
-
         # ================================
-        # 📁 ARCHIVISTE
+        # ARCHIVISTE
         # ================================
         elif role == "Archiviste":
+
             from views.archiviste import ArchivisteDashboard
             ArchivisteDashboard(self.root, nom)
 
-        
         # ================================
-        # 👤 USER
+        # UTILISATEUR
         # ================================
         elif role == "Utilisateur":
+
             from views.u import UserDashboard
             UserDashboard(self.root, nom)

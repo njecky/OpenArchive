@@ -11289,24 +11289,711 @@ L'administrateur peut ainsi distinguer immédiatement les documents qui doivent 
 🔔 système de rappel automatique réel (pop-up + timer Tkinter)
 
 
-Voici les champs que je n'ai pas
-Téléphone
- il
+Le plus propre est de créer une fonction dédiée dans ton `model.py`.
 
-| Attribut             | Rôle                                      |
-| -------------------- | ----------------------------------------- |
-| id                   | Identifiant du prêt                       |
-| borrower_name        | Nom de la personne ayant pris le document |
-| borrower_service     | Service/Département                       |
-| borrower_phone       | Téléphone                                 |
-| document_name        | Nom du document physique                  |
-| document_reference   | Référence ou numéro d'archive             |
-| reason               | Motif de l'emprunt                        |
-| loan_date            | Date de sortie (automatique)              |
-| loan_time            | Heure de sortie (automatique)             |
-| expected_return      | Date prévue de retour                     |
-| expected_return_time | Heure prévue de retour                    |
-| returned             | 0 = Non rendu, 1 = Rendu                  |
-| return_date          | Date réelle de retour                     |
-| return_time          | Heure réelle de retour                    |
-| notes                | Observations                              |
+Ajoute cette fonction à la fin du fichier :
+
+```python
+# ================================
+# 🗑️ SUPPRIMER TOUS LES EMPRUNTS
+# (Réinitialise également l'AUTOINCREMENT)
+# ================================
+def clear_physical_document_loans():
+
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    try:
+        # Supprime toutes les lignes
+        cursor.execute("""
+            DELETE FROM physical_document_loans
+        """)
+
+        # Réinitialise le compteur AUTOINCREMENT
+        cursor.execute("""
+            DELETE FROM sqlite_sequence
+            WHERE name = 'physical_document_loans'
+        """)
+
+        conn.commit()
+
+        return {
+            "success": True,
+            "message": "Tous les emprunts ont été supprimés."
+        }
+
+    except Exception as e:
+
+        conn.rollback()
+
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+    finally:
+        conn.close()
+```
+
+### Utilisation
+
+Depuis ton interface Tkinter :
+
+```python
+result = clear_physical_document_loans()
+
+if result["success"]:
+    print(result["message"])
+else:
+    print(result["message"])
+```
+
+Ou avec une boîte de dialogue :
+
+```python
+from tkinter import messagebox
+
+result = clear_physical_document_loans()
+
+if result["success"]:
+    messagebox.showinfo("Succès", result["message"])
+else:
+    messagebox.showerror("Erreur", result["message"])
+```
+
+### Ce que fait cette fonction
+
+* ✅ Supprime tous les enregistrements de `physical_document_loans`.
+* ✅ Réinitialise l'identifiant `id` pour que le prochain enregistrement commence à `1`.
+* ✅ Annule les modifications (`rollback`) en cas d'erreur.
+* ✅ Ferme toujours la connexion à la base de données.
+
+C'est la méthode que je te recommande pour les phases de développement et de test de ton projet **ArchivaDesk**.
+  |
+
+
+
+
+  La popup ne s'affiche pas voici le code :  
+
+        # Vérifie les retours après le chargement de l'interface
+
+        self.root.after(1500, self.check_due_today_notifications)
+
+        
+
+    # ================================
+
+    # 🔔 VÉRIFIER LES DOCUMENTS À RESTITUER AUJOURD'HUI
+
+    # ================================
+
+    def check_due_today_notifications(self):
+
+        print(">>> Vérification des documents à restituer")
+
+        """
+
+        les documents dont la restitution est prévue aujourd'hui.
+
+        Si un ou plusieurs documents sont trouvés,
+
+        une notification persistante est affichée.
+
+        """
+
+
+
+        try:
+
+
+
+            documents = get_due_today_documents()
+
+
+
+            # Aucun document à restituer
+
+            if not documents:
+
+                return
+
+
+
+            # Afficher la première notification
+
+            self.show_due_today_popup(documents[0])
+
+
+
+            # Évite d'ouvrir plusieurs fois la même popup
+
+            if hasattr(self, "notification_popup"):
+
+
+
+                if self.notification_popup.winfo_exists():
+
+                    return
+
+
+
+            # Affiche la fenêtre de notifications
+
+            self.show_due_today_popup(documents)
+
+
+
+        except Exception as e:
+
+
+
+            print("Erreur notification :", e)
+
+        finally:
+
+
+
+            # Nouvelle vérification dans 60 secondes
+
+            self.root.after(
+
+                60000,
+
+                self.check_due_today_notifications
+
+            )
+
+        
+
+    # ================================
+
+    # 🔔 POPUP - DOCUMENT À RESTITUER AUJOURD'HUI
+
+    # ================================
+
+    def show_due_today_popup(self, doc):
+
+        
+
+        # ================================
+
+        # 📄 DONNÉES DE L'EMPRUNT
+
+        # ================================
+
+        loan_id = doc[0]
+
+        document = doc[1]
+
+        borrower = doc[2]
+
+        service = doc[3]
+
+        date = doc[4]
+
+        heure = doc[5]
+
+
+
+        # ================================
+
+        # 🪟 CRÉATION DE LA FENÊTRE POPUP
+
+        # ================================
+
+        self.notification_popup = tk.Toplevel(self.root)
+
+        popup = self.notification_popup
+
+
+
+        popup.title("Documents à restituer")
+
+        popup.geometry("430x330")
+
+        popup.configure(bg="white")
+
+
+
+        # Toujours afficher au premier plan
+
+        popup.attributes("-topmost", True)
+
+
+
+        # Empêche le redimensionnement
+
+        popup.resizable(False, False)
+
+
+
+        # Rend la fenêtre modale
+
+        popup.grab_set()
+
+
+
+        # ================================
+
+        # 🔶 EN-TÊTE DE LA NOTIFICATION
+
+        # ================================
+
+        header = tk.Frame(
+
+            popup,
+
+            bg="#F59E0B",
+
+            height=60
+
+        )
+
+
+
+        header.pack(fill="x")
+
+
+
+        tk.Label(
+
+            header,
+
+            text="🔔 Documents à restituer aujourd'hui",
+
+            bg="#F59E0B",
+
+            fg="white",
+
+            font=("Segoe UI", 14, "bold")
+
+        ).pack(pady=18)
+
+
+
+        # ================================
+
+        # 📦 CONTENU PRINCIPAL
+
+        # ================================
+
+        body = tk.Frame(
+
+            popup,
+
+            bg="white"
+
+        )
+
+
+
+        body.pack(
+
+            fill="both",
+
+            expand=True,
+
+            padx=20,
+
+            pady=15
+
+        )
+
+
+
+        # ================================
+
+        # 📄 NOM DU DOCUMENT
+
+        # ================================
+
+        tk.Label(
+
+            body,
+
+            text=f"📄 {document}",
+
+            font=("Segoe UI", 12, "bold"),
+
+            bg="white",
+
+            anchor="w"
+
+        ).pack(fill="x", pady=5)
+
+
+
+        # ================================
+
+        # 👤 INFORMATIONS SUR L'EMPRUNTEUR
+
+        # ================================
+
+        tk.Label(
+
+            body,
+
+            text=f"👤 Emprunteur : {borrower}",
+
+            bg="white",
+
+            anchor="w"
+
+        ).pack(fill="x")
+
+
+
+        tk.Label(
+
+            body,
+
+            text=f"🏢 Service : {service}",
+
+            bg="white",
+
+            anchor="w"
+
+        ).pack(fill="x")
+
+
+
+        # ================================
+
+        # 📅 DATE ET HEURE DE RETOUR PRÉVUES
+
+        # ================================
+
+        tk.Label(
+
+            body,
+
+            text=f"📅 Retour prévu :\n{date} à {heure}",
+
+            bg="white",
+
+            justify="left",
+
+            anchor="w"
+
+        ).pack(fill="x", pady=10)
+
+
+
+        # ================================
+
+        # ⚠️ MESSAGE D'ALERTE
+
+        # ================================
+
+        tk.Label(
+
+            body,
+
+            text="⚠ Ce document n'a pas encore été restitué.",
+
+            fg="red",
+
+            bg="white",
+
+            font=("Segoe UI", 10, "bold")
+
+        ).pack(anchor="w")
+
+
+
+        # ================================
+
+        # 🎛️ BOUTONS D'ACTION
+
+        # ================================
+
+        # Voir le document
+
+        # Marquer comme restitué
+
+        # Plus tard
+
+        Button(
+
+            buttons,
+
+            text="👁 Voir",
+
+            bg="#2563EB",
+
+            fg="white",
+
+            relief="flat",
+
+            cursor="hand2",
+
+            width=12,
+
+            command=view_document
+
+        ).pack(side="left", padx=5)
+
+
+
+        Button(
+
+            buttons,
+
+            text="✔ Restitué",
+
+            bg="#16A34A",
+
+            fg="white",
+
+            relief="flat",
+
+            cursor="hand2",
+
+            width=14,
+
+            command=mark_returned
+
+        ).pack(side="left", padx=5)
+
+
+
+        Button(
+
+            buttons,
+
+            text="⏰ Plus tard",
+
+            bg="#E5E7EB",
+
+            fg="#374151",
+
+            relief="flat",
+
+            cursor="hand2",
+
+            width=12,
+
+            command=remind_later
+
+        ).pack(side="left", padx=5)
+
+        
+
+        def view_document():
+
+
+
+            popup.destroy()
+
+
+
+            self.show_physical_documents()
+
+        
+
+        def mark_returned():
+
+
+
+            if messagebox.askyesno(
+
+                "Confirmation",
+
+                "Marquer ce document comme restitué ?"
+
+            ):
+
+
+
+                mark_document_returned(loan_id)
+
+
+
+                popup.destroy()
+
+
+
+                self.show_physical_documents()
+
+                
+
+        def remind_later():
+
+            popup.destroy()
+
+            
+
+        
+
+        def close_popup():
+
+            self.notification_popup = None
+
+            popup.destroy()
+
+            popup.protocol("WM_DELETE_WINDOW", close_popup)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Je ne refuse pas 😄. Au contraire, ton système de notification est presque terminé. Mais pour avancer rapidement dans ArchivaDesk, je te conseille effectivement de contourner la popup persistante pour l'instant et de créer deux scénarios très professionnels avec les boutons :
+
+### 📥 Retour document
+
+Action rapide
+
+Le bouton ouvre une fenêtre de restitution.
+
+### 🎯 Scénario utilisateur
+
+1. L'utilisateur sélectionne un document dans la table.
+
+2. Il clique sur 📥 Retour document.
+
+3. Une fenêtre s'ouvre avec les informations du document.
+
+4. Il confirme le retour.
+
+5. Le système met à jour la base de données.
+
+6. Le tableau se rafraîchit automatiquement.
+
+### 🖥️ Interface proposée
+
+### Retour du document
+
+📄 Document :
+
+Contrat de bail 2024
+
+👤 Emprunteur :
+
+Jean Dupont
+
+📅 Sorti le :
+
+01/07/2026
+
+📅 Retour prévu :
+
+03/07/2026
+
+Annuler
+
+Confirmer le retour
+
+### 🗄️ Action SQL
+
+### 💡 Avantage
+
+C'est le moyen le plus simple et le plus fiable pour gérer les retours sans popup persistante.
+
+### 🔔 Rappels
+
+Centre de rappels
+
+Ce bouton devient un centre de rappels beaucoup plus pratique qu'une popup automatique.
+
+### 🎯 Scénario utilisateur
+
+1. L'utilisateur clique sur 🔔 Rappels.
+
+2. Une fenêtre s'ouvre.
+
+3. Le système affiche :
+
+   * les documents à restituer aujourd'hui,
+
+   * les documents en retard,
+
+   * les documents à restituer demain.
+
+4. L'utilisateur peut agir directement depuis cette fenêtre.
+
+### 🖥️ Interface proposée
+
+### Centre de rappels
+
+Aujourd'hui
+
+2
+
+📄 Contrat de bail 2024
+
+👤 Jean Dupont
+
+🕒 15:00
+
+Voir
+
+Restitué
+
+En retard
+
+1
+
+📄 Dossier RH
+
+👤 Paul N.
+
+🔴 3 jours de retard
+
+Contacter
+
+Restitué
+
+Fermer
+
+### 🗄️ Requêtes utiles
+
+📌 Aujourd'hui
+
+📌 En retard
+
+### 💡 Pourquoi c'est mieux ?
+
+Franchement, pour ArchivaDesk, je choisirais cette approche :
+
+* ❌ Pas de popup automatique qui peut gêner l'utilisateur.
+
+* ✅ Un centre de rappels accessible à tout moment.
+
+* ✅ Une carte statistique sur le dashboard : 🔔 3 rappels aujourd'hui.
+
+* ✅ Le bouton 🔔 Rappels devient l'entrée principale des notifications.
+
+* ✅ Plus simple à maintenir.
+
+* ✅ Plus professionnel.
+
+* ✅ Plus proche des logiciels SaaS modernes.
+
+### 🚀 Mon conseil final
+
+Pour l'instant, fais :
+
+* 📥 Retour document → ouvre la fenêtre de restitution.
+
+* 🔔 Rappels → ouvre le Centre de rappels.
+
+* Sur le dashboard, affiche un badge : 🔔 3.
+
+Et plus tard, quand tout sera stable, tu pourras ajouter la popup persistante en complément.
+
+C'est exactement comme ça que beaucoup de logiciels de gestion commencent avant d'ajouter des notifications temps réel.
