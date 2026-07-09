@@ -17,6 +17,8 @@ from config.function import *
 from views.document_viewer import *
 from views.return_documents import *
 from views.notification_center import *
+from controllers.pdf_return_controller import export_return_report
+from views.return_statistics import ReturnStatistics
 import re
 
 try:
@@ -4109,9 +4111,10 @@ class AdminDashboard:
         btn_return = tk.Button(actions,text="📥 Retour document",bg=SUCCESS_COLOR,fg=WHITE,command=self.open_return_documents)
         btn_return.pack(side="left", padx=5)
         tk.Button(actions,text="🔔 Rappels",bg=WARNING_COLOR,fg=WHITE,command=self.open_notifications).pack(side="left", padx=5)
-        tk.Button(actions, text="🖨 Export PDF", bg=SECONDARY_COLOR, fg=WHITE).pack(side="left", padx=5)
-        tk.Button(actions, text="📊 Statistiques", bg=DARK_COLOR, fg=WHITE).pack(side="left", padx=5)
-
+        btn_pdf = tk.Button(actions,text="🖨 Export PDF",bg=SECONDARY_COLOR,fg=WHITE,command=self.export_pdf)
+        btn_pdf.pack(side="left", padx=5)
+        btn_stats = tk.Button(actions,text="📊 Statistiques",bg=DARK_COLOR,fg=WHITE,command=self.open_statistics)
+        btn_stats.pack(side="left", padx=5)
         # ================================
         # 📋 TABLE (FULL VIEW FIX)
         # ================================
@@ -4193,6 +4196,279 @@ class AdminDashboard:
         
     def open_notifications(self):
         NotificationCenter(self.root)
+        
+    def export_pdf(self):
+        export_return_report()
+        
+    def open_statistics(self):
+        ReturnStatistics(self.root)
+        
+    # ================================
+    # 📄 EXPORTER LE RAPPORT PDF
+    # ================================
+    def export_return_report():
+
+        conn = sqlite3.connect(DB_PATH)
+
+        cursor = conn.cursor()
+
+        cursor.execute("""
+
+            SELECT
+
+                document_name,
+
+                borrower_name,
+
+                borrower_phone,
+
+                expected_return,
+
+                expected_return_time,
+
+                status
+
+            FROM physical_document_loans
+
+            ORDER BY expected_return ASC
+
+        """)
+
+        documents = cursor.fetchall()
+
+        conn.close()
+
+        # ================================
+        # 📁 CHOISIR LE DOSSIER
+        # ================================
+        filename = filedialog.asksaveasfilename(
+
+            title="Enregistrer le rapport",
+
+            defaultextension=".pdf",
+
+            filetypes=[
+                ("PDF", "*.pdf")
+            ]
+
+        )
+
+        if not filename:
+            return
+
+        # ================================
+        # 📄 DOCUMENT PDF
+        # ================================
+        pdf = SimpleDocTemplate(
+            filename,
+            pagesize=A4
+        )
+
+        styles = getSampleStyleSheet()
+
+        elements = []
+
+        # ================================
+        # 🏢 TITRE
+        # ================================
+        elements.append(
+
+            Paragraph(
+
+                "<b><font size=18>DigiBox</font></b>",
+
+                styles["Title"]
+
+            )
+        )
+
+        elements.append(
+
+            Paragraph(
+
+                "Rapport des retours de documents",
+
+                styles["Heading2"]
+
+            )
+
+        )
+
+        elements.append(
+
+            Paragraph(
+
+                datetime.now().strftime(
+
+                    "Date : %d/%m/%Y %H:%M"
+
+                ),
+
+                styles["Normal"]
+
+            )
+
+        )
+
+        elements.append(
+
+            Spacer(
+
+                1,
+
+                20
+
+            )
+
+        )
+
+        # ================================
+        # 📋 TABLE (FULL VIEW FIX)
+        # ================================
+        data = [
+
+            [
+
+                "Document",
+
+                "Emprunteur",
+
+                "Téléphone",
+
+                "Retour prévu",
+
+                "Heure",
+
+                "Statut"
+
+            ]
+
+        ]
+
+        for row in documents:
+
+            data.append(
+
+                [
+
+                    row[0],
+
+                    row[1],
+
+                    row[2],
+
+                    row[3],
+
+                    row[4],
+
+                    row[5]
+
+                ]
+
+            )
+
+        table = Table(
+
+            data,
+
+            repeatRows=1
+
+        )
+
+        table.setStyle(
+
+            TableStyle(
+
+                [
+
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2C3E50")),
+
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+
+                    ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
+
+                    ("BACKGROUND", (0, 1), (-1, -1), colors.beige)
+
+                ]
+
+            )
+
+        )
+
+        elements.append(
+
+            table
+
+        )
+
+        elements.append(
+
+            Spacer(
+
+                1,
+
+                20
+
+            )
+
+        )
+
+        # ================================
+        # 📌 TOTAL
+        # ================================
+        elements.append(
+
+            Paragraph(
+
+                f"<b>Nombre total de documents :</b> {len(documents)}",
+
+                styles["Heading3"]
+
+            )
+
+        )
+
+        # ================================
+        # ✍ SIGNATURE
+        # ================================
+        elements.append(
+
+            Spacer(
+
+                1,
+
+                40
+
+            )
+
+        )
+
+        elements.append(
+
+            Paragraph(
+
+                "Archiviste ________________________",
+
+                styles["Normal"]
+
+            )
+
+        )
+
+        # ================================
+        # 💾 GÉNÉRATION
+        # ================================
+        pdf.build(
+
+            elements
+
+        )
     # ================================
     # Cette section gère les actions principales du formulaire :
     # - Validation des données saisies

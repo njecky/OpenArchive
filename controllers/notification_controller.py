@@ -12,16 +12,24 @@ def get_overdue_documents():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id, document_name, borrower_name,
-               expected_return, expected_return_time
+        SELECT
+            id,
+            document_name,
+            borrower_name,
+            borrower_phone,
+            expected_return,
+            expected_return_time
         FROM physical_document_loans
         WHERE returned = 0
-        AND date(expected_return) < date('now','localtime')
-        ORDER BY expected_return ASC
+          AND date(expected_return) < date('now','localtime')
+        ORDER BY expected_return ASC,
+                 expected_return_time ASC
     """)
 
     data = cursor.fetchall()
+
     conn.close()
+
     return data
 
 
@@ -34,20 +42,29 @@ def get_today_documents():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id, document_name, borrower_name,
-               expected_return, expected_return_time
+        SELECT
+            id,
+            document_name,
+            borrower_name,
+            borrower_phone,
+            expected_return,
+            expected_return_time
         FROM physical_document_loans
         WHERE returned = 0
-        AND date(expected_return) = date('now','localtime')
+          AND date(expected_return)=date('now','localtime')
+        ORDER BY expected_return_time ASC
     """)
 
     data = cursor.fetchall()
+
     conn.close()
+
     return data
 
 
 # ================================
-# ⚠️ PROCHES EXPIRATION (3 jours)
+# ⏳ DOCUMENTS À VENIR
+# (de demain jusqu'à J+7)
 # ================================
 def get_upcoming_documents():
 
@@ -55,15 +72,25 @@ def get_upcoming_documents():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id, document_name, borrower_name,
-               expected_return, expected_return_time
+        SELECT
+            id,
+            document_name,
+            borrower_name,
+            borrower_phone,
+            expected_return,
+            expected_return_time
         FROM physical_document_loans
         WHERE returned = 0
-        AND date(expected_return) BETWEEN date('now','localtime')
-                                    AND date('now','localtime','+3 day')
-        ORDER BY expected_return ASC
+          AND date(expected_return)
+              BETWEEN date('now','localtime','+1 day')
+                  AND date('now','localtime','+7 day')
+        ORDER BY
+            expected_return ASC,
+            expected_return_time ASC
     """)
 
     data = cursor.fetchall()
+
     conn.close()
+
     return data
